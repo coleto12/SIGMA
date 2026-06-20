@@ -1,0 +1,45 @@
+# Entornos virtuales
+venv/
+env/
+.venv/
+**/venv/
+**/env/
+
+# Variables de entorno (NUNCA subir credenciales reales)
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+**/__pycache__/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+**/media/
+**/staticfiles/
+
+# Node / Frontend (para cuando exista sigma_frontend/)
+node_modules/
+**/node_modules/
+.next/
+dist/
+build/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
