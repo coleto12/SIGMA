@@ -22,6 +22,17 @@ ALLOWED_HOSTS = config(
 ).split(',')
 
 # -------------------------------------------------------------------
+# CSRF en producción: Django exige que los orígenes HTTPS desde donde
+# se envían formularios (como el login del admin) estén declarados
+# explícitamente. Sin esto, el admin da "403 Verificación CSRF fallida"
+# en Railway (y cualquier host distinto a localhost detrás de HTTPS).
+# -------------------------------------------------------------------
+CSRF_TRUSTED_ORIGINS = config(
+    'DJANGO_CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:8000,http://127.0.0.1:8000'
+).split(',')
+
+# -------------------------------------------------------------------
 # Aplicaciones instaladas
 # -------------------------------------------------------------------
 INSTALLED_APPS = [
