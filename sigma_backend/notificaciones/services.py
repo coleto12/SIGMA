@@ -85,19 +85,24 @@ def _enviar_correo(usuario, tipo_evento, mensaje, archivo_adjunto=None, nombre_a
             contenido_binario = archivo_adjunto.read()
             archivo_adjunto.close()
             email.attach(nombre_adjunto or 'documento.pdf', contenido_binario, 'application/pdf')
-            email.send(fail_silently=True)
+            # fail_silently=False a propósito: con True, Django traga la
+            # excepción internamente y nunca llega al except de abajo, lo
+            # que deja el error completamente invisible en los logs (ver
+            # bug real: los correos fallaban sin ningún rastro en
+            # producción). Con False, la excepción sí se lanza y el except
+            # la captura, la registra, y sigue sin tumbar el flujo igual.
+            email.send(fail_silently=False)
         else:
             send_mail(
                 subject=asunto,
                 message=mensaje,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[correo_destino],
-                fail_silently=True,
+                fail_silently=False,
             )
     except Exception as error:
         # Igual que con la notificación in-app: un fallo de correo (SMTP
         # caído, credenciales inválidas, etc.) no debe romper el flujo
         # de negocio que disparó la notificación.
         # TODO: cambiar este print por logging.exception en producción.
-        print(f'[notificaciones] No se pudo enviar el correo a {correo_destino}: {error}')
-        pass
+        print(f'[notificaciones] No se pudo enviar el correo a {correo_destino}: {error}', flush=True)
