@@ -1,0 +1,170 @@
+/* DISEÑO DEL GRID DE PERÍODO ACADÉMICO */
+.grid-info-periodo {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px 24px !important;
+  }
+  
+  .info-label {
+    display: block;
+    font-size: 11.5px;
+    color: #64748b;
+    margin-bottom: 4px;
+  }
+  
+  .info-value {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #1e293b;
+    margin: 0;
+  }
+  
+  /* MARGENS Y AJUSTES DE TABLA */
+  .px-24 { padding-left: 24px; padding-right: 24px; }
+  .py-16 { padding-top: 16px; padding-bottom: 16px; }
+  .display-flex-space {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .badge-credits-status {
+    background-color: #d1fae5;
+    color: #065f46;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+  }
+  .horario-cell {
+    white-space: pre-line;
+    color: #0284c7 !important;
+    font-weight: 500;
+  }
+  .text-muted-dark { color: #64748b; }
+  
+  /* LEYENDAS INFERIORES DE TABLA */
+  .table-legends {
+    display: flex;
+    gap: 16px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+  }
+  .circle-legend {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .bg-success { background-color: #10b981; }
+  .bg-warning { background-color: #f59e0b; }
+  .bg-danger { background-color: #ef4444; }
+  
+  /* RESUMEN ASIDE */
+  .resumen-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .resumen-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #475569;
+  }
+  .resumen-row strong { color: #1e293b; }
+  
+  /* REQUISITOS CHECKLIST */
+  .requisitos-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .req-check-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  .check-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #334155;
+  }
+  .text-success { color: #10b981; }
+  
+  /* ALERTA INTERNA AZUL DEL ASIDE */
+  .alert-inner-blue {
+    background-color: #eff6ff;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+  }
+  .alert-inner-content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* GRÁFICO RADIAL SIMULADO CON CSS CONCÉNTRICO */
+  .radial-progress-container {
+    display: flex;
+    justify-content: center;
+  }
+  .circle-progress-mock {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(#10b981 260deg, #e2e8f0 0deg); /* 13 de 18 partes aproximadas */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .circle-inner-text {
+    width: 82px;
+    height: 82px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .inner-number { font-size: 20px; font-weight: 700; color: #1e293b; }
+  .inner-subtext { font-size: 11px; color: #64748b; }
+  .radial-legends {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    font-size: 11px;
+  }
+  .radial-legend-item { display: flex; align-items: center; gap: 4px; color: #64748b; }
+  .dot-legend { width: 6px; height: 6px; border-radius: 50%; }
+  .bg-gray-light { background-color: #e2e8f0; }
+  
+  /* ESTILOS DE ALERTAS ADICIONALES ORANGE */
+  .alert-orange-bg { background-color: #fff7ed; border: 1px solid #ffedd5; }
+  .text-orange { color: #c2410c; }
+  .btn-aside-outline-blue {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    color: #2563eb;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-aside-outline-blue:hover { background-color: #f1f5f9; }

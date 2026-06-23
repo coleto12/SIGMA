@@ -1,0 +1,147 @@
+/* GRID SUPERIOR DE LA SOLICITUD */
+.grid-info-validacion-solicitud {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    background-color: #f8fafc;
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  /* COMPOSICIÓN DE DOS COLUMNAS EN PARALELO */
+  .grid-dos-columnas {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 16px;
+  }
+  
+  /* BLOQUE DE PERFIL DEL ESTUDIANTE */
+  .student-profile-block {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .student-avatar-mock {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .student-meta-details {
+    display: flex;
+    flex-direction: column;
+  }
+  .student-name {
+    font-size: 14px;
+    color: #1e293b;
+  }
+  .student-subtext {
+    font-size: 12px;
+    color: #64748b;
+    margin: 2px 0 0 0;
+  }
+  .student-subtext strong {
+    color: #475569;
+  }
+  
+  /* GRID DE RESUMEN CON ICONOS MOCK */
+  .grid-resumen-iconos {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .resumen-icon-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .icon-wrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bg-blue-light { background-color: #eff6ff; }
+  .bg-success-light { background-color: #ecfdf5; }
+  .bg-info-light { background-color: #f0f9ff; }
+  
+  .icon-wrapper-large {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* GRID DE ACCIONES E IMPUT DE OBSERVACIONES */
+  .grid-acciones-validacion {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .textarea-counter {
+    display: block;
+    text-align: right;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+  
+  /* BOTONES DE DECISIÓN DE ACCIONES */
+  .btn-sol-rechazar-full {
+    background-color: #ffffff;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .btn-sol-rechazar-full:hover { background-color: #fef2f2; }
+  
+  .btn-sol-aprobar-full {
+    background-color: #10b981;
+    border: none;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .btn-sol-aprobar-full:hover { background-color: #059669; }
+  
+  /* ALERTAS INTERNAS GENERALES */
+  .alert-inner-gray {
+    background-color: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  /* MISCELÁNEOS */
+  .text-slate { color: #334155; }
+  .margin-bottom-none { margin-bottom: 0 !important; }
+  .justify-end { justify-content: flex-end; }
+  .line-height-md { line-height: 1.5; }

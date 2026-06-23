@@ -1,0 +1,69 @@
+.diseño-principal {
+  display: flex;
+  min-height: 100vh;
+}
+
+.diseño-principal__contenido {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.diseño-principal__vista {
+  flex: 1;
+  padding: 1.5rem 2rem;
+}
+
+.barra-lateral {
+  width: 260px;
+  background-color: var(--color-fondo-oscuro);
+  color: var(--color-texto-claro);
+  display: flex;
+  flex-direction: column;
+}
+
+.barra-lateral__marca {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1.25rem;
+}
+
+.barra-lateral__navegacion {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+}
+
+.barra-lateral__seccion {
+  margin: 0.75rem 0.5rem 0.25rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.barra-lateral__ayuda {
+  padding: 1rem 1.25rem;
+}
+
+.encabezado-superior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.encabezado-superior__acciones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.encabezado-superior__usuario {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

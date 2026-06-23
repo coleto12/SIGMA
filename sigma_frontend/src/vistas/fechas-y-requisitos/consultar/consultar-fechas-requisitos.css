@@ -1,0 +1,284 @@
+/* DISEÑO DEL CONTENEDOR EN DOS COLUMNAS */
+.sigma-fechas-container {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    background-color: #f8fafc;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    align-items: flex-start;
+  }
+  
+  .sigma-fechas-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .sigma-fechas-aside {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 24px;
+  }
+  
+  /* ENCABEZADOS */
+  .sigma-fechas-header h2 {
+    font-size: 26px;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+    font-weight: 700;
+  }
+  
+  .sigma-fechas-header p {
+    color: #64748b;
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  /* CONTENEDOR DE TARJETAS BLANCAS */
+  .sigma-card-fechas {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+  }
+  
+  /* FILTROS GRID */
+  .filtros-fechas-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) auto;
+    gap: 16px;
+    align-items: flex-end;
+  }
+  
+  .filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .filter-item label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+  }
+  
+  .filter-item select {
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #334155;
+    background-color: #ffffff;
+    outline: none;
+  }
+  
+  .filtros-fechas-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-fechas-consultar {
+    background-color: #f59e0b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  
+  .btn-fechas-limpiar {
+    background-color: #ffffff;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  
+  /* TÍTULOS INTERNOS DE SECCIÓN */
+  .section-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .section-title-row h3 {
+    font-size: 16px;
+    margin: 0;
+    color: #1e293b;
+    font-weight: 700;
+  }
+  
+  .icon-amber { color: #d97706; }
+  .section-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 4px 0 24px 0;
+  }
+  
+  /* TIMELINE HORIZONTAL */
+  .timeline-wrapper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 20px 0;
+    padding: 0 10px;
+  }
+  
+  .timeline-line {
+    position: absolute;
+    top: 24px;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background-color: #e2e8f0;
+    z-index: 1;
+  }
+  
+  .timeline-node {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 140px;
+  }
+  
+  .node-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 2px solid #e2e8f0;
+    margin-bottom: 12px;
+  }
+  
+  .node-icon-circle .material-icons-outlined { font-size: 20px; }
+  
+  /* Paleta de círculos del Timeline */
+  .blue-light { background-color: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+  .green-light { background-color: #f0fdf4; border-color: #bbf7d0; color: #16a34a; }
+  .orange-light { background-color: #fff7ed; border-color: #fed7aa; color: #ea580c; }
+  .purple-light { background-color: #faf5ff; border-color: #e9d5ff; color: #9333ea; }
+  .teal-light { background-color: #f0fdfa; border-color: #99f6e4; color: #0d9488; }
+  
+  .node-title { font-size: 12px; font-weight: 700; color: #1e293b; margin: 0 0 6px 0; line-height: 1.3; }
+  .node-date { font-size: 12px; font-weight: 600; color: #334155; margin: 0; }
+  .node-time { font-size: 11px; color: #64748b; margin: 2px 0 0 0; }
+  .text-muted { color: #94a3b8; }
+  
+  /* TABLA DE REQUISITOS */
+  .table-fechas-responsive { margin-top: 16px; }
+  
+  .table-fechas-requisitos {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  
+  .table-fechas-requisitos th {
+    color: #64748b;
+    font-weight: 500;
+    font-size: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+  }
+  
+  .table-fechas-requisitos td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    color: #334155;
+    vertical-align: middle;
+  }
+  
+  .text-muted-num { color: #94a3b8; font-weight: 500; }
+  .text-slate { color: #334155; }
+  .text-muted-desc { color: #64748b; font-size: 12.5px; line-height: 1.4; }
+  .font-mono { font-family: monospace; color: #475569; }
+  
+  /* BADGES DE OBLIGATORIEDAD */
+  .badge-obligatorio {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-obligatorio.si { background-color: #e6f4ea; color: #137333; }
+  .badge-obligatorio.no { background-color: #f1f5f9; color: #475569; }
+  
+  /* BANNER INFORMATIVO INFERIOR */
+  .banner-info-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #eff6ff;
+    border: 1px solid #dbeafe;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 24px;
+  }
+  .banner-info-footer span { color: #2563eb; font-size: 18px; }
+  .banner-info-footer p { margin: 0; font-size: 12.5px; color: #1e40af; }
+  
+  /* ASIDE COMPONENTES DETALLES */
+  .aside-fechas-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  
+  .aside-fechas-row { display: flex; gap: 12px; align-items: center; }
+  
+  .aside-calendar-box {
+    background-color: #fef3c7;
+    color: #f59e0b;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .label-top { font-size: 11px; color: #64748b; display: block; }
+  .aside-fechas-row h4 { margin: 2px 0; font-size: 18px; color: #1e293b; font-weight: 700; }
+  .badge-vigente-verde { background-color: #e6f4ea; color: #137333; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+  .aside-date-range { font-size: 12px; color: #64748b; margin: 12px 0 0 0; }
+  
+  .aside-title { font-size: 14px; margin: 0 0 16px 0; color: #1e293b; font-weight: 600; }
+  
+  .aside-resumen-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
+  .aside-resumen-list li { display: flex; gap: 12px; align-items: flex-start; }
+  
+  .icon-summary { color: #64748b; font-size: 18px; margin-top: 2px; }
+  .title-summary { font-size: 12px; font-weight: 600; color: #334155; margin: 0; }
+  .detail-summary { font-size: 12px; color: #64748b; margin: 2px 0 0 0; }
+  
+  /* ALERTA */
+  .alert-blue-bg { background-color: #eff6ff; border-color: #dbeafe; }
+  .alert-title-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .alert-text { font-size: 12px; color: #475569; margin: 6px 0 0 0; line-height: 1.5; }

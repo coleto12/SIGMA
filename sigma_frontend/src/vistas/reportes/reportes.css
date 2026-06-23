@@ -1,0 +1,115 @@
+/* ENCABEZADO Y TÍTULOS */
+.reportes-header {
+  margin-bottom: 24px;
+}
+.reportes-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+.reportes-header p {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 6px;
+}
+.reportes-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 32px 0 16px 0;
+}
+
+/* PANEL / FILTROS DE CONFIGURACIÓN */
+.reportes-toolbar-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.toolbar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 16px 0;
+}
+.reportes-toolbar-flex {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.toolbar-field-grow {
+  flex: 2 1 280px;
+}
+.toolbar-field-shrink {
+  flex: 1 1 160px;
+}
+.toolbar-button-align {
+  margin-bottom: 2px; /* Alineación perfecta con el eje del input */
+}
+.boton-reporte-ejecutar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px !important;
+  font-weight: 600;
+}
+.icon-inside-btn {
+  font-size: 18px;
+}
+
+/* MALLA DE TARJETAS / FORMATOS */
+.grid-reportes-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.report-card-body {
+  display: flex;
+  gap: 16px;
+  padding-top: 8px;
+  align-items: flex-start;
+}
+.report-card-icon {
+  font-size: 32px;
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.report-card-text p {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+.file-format-badge {
+  background-color: #f1f5f9;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* UTILIDADES DE COLOR */
+.color-blue { color: #2563eb; background-color: #eff6ff; }
+.color-purple { color: #7c3aed; background-color: #f5f3ff; }
+.color-amber { color: #d97706; background-color: #fffbeb; }
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .reportes-toolbar-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar-button-align button {
+    width: 100%;
+    justify-content: center;
+  }
+}

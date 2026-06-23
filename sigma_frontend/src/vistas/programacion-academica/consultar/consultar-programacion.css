@@ -1,0 +1,328 @@
+/* CONTAINER DE DOS COLUMNAS */
+.sigma-consultar-container {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    background-color: #f8fafc;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    align-items: flex-start;
+  }
+  
+  .sigma-consultar-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .sigma-consultar-aside {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 24px;
+  }
+  
+  /* ENCABEZADOS */
+  .sigma-consultar-header h2 {
+    font-size: 26px;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+    font-weight: 700;
+  }
+  
+  .sigma-consultar-header p {
+    color: #64748b;
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  /* CARDS COMUNES */
+  .sigma-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+  
+  /* SECCIÓN FILTROS */
+  .sigma-filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) auto;
+    gap: 16px;
+    align-items: flex-end;
+  }
+  
+  .sigma-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .sigma-filter-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+  }
+  
+  .sigma-filter-group select {
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #334155;
+    background-color: #ffffff;
+    outline: none;
+  }
+  
+  .sigma-filtros-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-consultar {
+    background-color: #f59e0b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  
+  .btn-limpiar {
+    background-color: #ffffff;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  
+  /* CARDS DE MÉTRICAS */
+  .sigma-metricas-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  
+  .metric-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .metric-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .metric-icon-box .material-icons-outlined { font-size: 22px; }
+  
+  .blue-bg { background-color: #eff6ff; color: #2563eb; }
+  .green-bg { background-color: #f0fdf4; color: #16a34a; }
+  .purple-bg { background-color: #faf5ff; color: #9333ea; }
+  .orange-bg { background-color: #fff7ed; color: #ea580c; }
+  
+  .metric-label { font-size: 12px; color: #64748b; font-weight: 500; }
+  .metric-info h3 { font-size: 22px; margin: 2px 0; color: #1e293b; font-weight: 700; }
+  .metric-info p { font-size: 11px; color: #94a3b8; margin: 0; }
+  
+  /* TABLA CONTENEDORA */
+  .sigma-tabla-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .sigma-tabla-top-bar h4 { font-size: 16px; margin: 0; color: #1e293b; font-weight: 600; }
+  .sigma-tabla-export-btns { display: flex; gap: 8px; }
+  
+  .btn-export-outline {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  
+  .sigma-programacion-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  
+  .sigma-programacion-table th {
+    color: #64748b;
+    font-weight: 500;
+    font-size: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+  }
+  
+  .sigma-programacion-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    color: #334155;
+    vertical-align: middle;
+  }
+  
+  .text-muted-arrow { color: #cbd5e1; }
+  .fw-semibold { font-weight: 600; }
+  .text-dark-mono { font-family: monospace; color: #475569; font-size: 13px; }
+  .text-muted-details { color: #64748b; font-size: 12px; line-height: 1.4; }
+  
+  /* BADGES DE ESTADO ASIGNATURA */
+  .badge-asig-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  .badge-asig-status.activa { background-color: #e6f4ea; color: #137333; }
+  .badge-asig-status.edicion { background-color: #fef3c7; color: #b45309; }
+  .badge-asig-status.inactiva { background-color: #fce8e6; color: #c5221f; }
+  
+  .badge-horario {
+    background-color: #f0fdfa;
+    color: #0d9488;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .btn-table-view {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+  }
+  .btn-table-view:hover { background: #cbd5e1; color: #1e293b; }
+  
+  /* PAGINACIÓN */
+  .sigma-pagination-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+  }
+  
+  .pagination-info { font-size: 13px; color: #64748b; }
+  .pagination-controls { display: flex; gap: 6px; }
+  
+  .btn-page-nav, .btn-page-num {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+  
+  .btn-page-num.active {
+    background-color: #f59e0b;
+    color: #ffffff;
+    border-color: #f59e0b;
+    font-weight: 600;
+  }
+  
+  .btn-page-nav:disabled { color: #cbd5e1; cursor: not-allowed; }
+  
+  /* ASIDE DERECHO ESPECÍFICO */
+  .aside-summary-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  
+  .aside-summary-row { display: flex; gap: 12px; align-items: center; }
+  
+  .aside-icon-calendar {
+    background-color: #fef3c7;
+    color: #f59e0b;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .aside-card-label { font-size: 11px; color: #64748b; display: block; }
+  .aside-summary-row h4 { margin: 2px 0; font-size: 18px; color: #1e293b; font-weight: 700; }
+  .badge-aside-vigente { background-color: #e6f4ea; color: #137333; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+  .aside-card-date { font-size: 12px; color: #64748b; margin: 0; }
+  
+  .aside-block-title { font-size: 14px; margin: 0 0 12px 0; color: #1e293b; font-weight: 600; }
+  
+  .aside-leyenda-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .aside-leyenda-list li { display: flex; flex-direction: column; gap: 4px; }
+  .inline-badge { width: max-content; text-align: center; }
+  .aside-leyenda-list p { font-size: 12px; color: #64748b; margin: 0; }
+  
+  .aside-acciones-group { display: flex; flex-direction: column; gap: 8px; }
+  
+  .btn-aside-action {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-aside-action:hover { background: #f8fafc; border-color: #cbd5e1; }
+  
+  .info-blue-bg { background-color: #eff6ff; border-color: #dbeafe; }
+  .info-title-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .info-card-text { font-size: 12px; color: #64748b; margin: 6px 0 0 0; line-height: 1.4; }
+  .mt-3 { margin-top: 12px; }

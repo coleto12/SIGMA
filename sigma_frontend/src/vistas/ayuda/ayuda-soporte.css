@@ -1,0 +1,47 @@
+/* AJUSTE DE DISEÑO PARA PANTALLA COMPLETA */
+.no-aside {
+    grid-template-columns: 1fr !important; /* Desactiva la barra lateral derecha para esta sección */
+  }
+  
+  /* ESTILOS DEL CONTENEDOR DE PREGUNTAS FRECUENTES */
+  .faq-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .faq-item {
+    padding-bottom: 16px;
+  }
+  
+  .faq-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  /* CLASES DE UTILIDAD GENERAL (Por si no las tienes en tus estilos globales) */
+  .pb-12 {
+    padding-bottom: 12px;
+  }
+  
+  .display-block {
+    display: block;
+  }
+  
+  .align-center {
+    align-items: center;
+  }
+  
+  .gap-sm {
+    gap: 12px;
+  }
+  
+  /* TRANSICIÓN SUAVE AL PASAR EL RATÓN POR LAS TARJETAS DE CANALES */
+  .sigma-form-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .sigma-form-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }

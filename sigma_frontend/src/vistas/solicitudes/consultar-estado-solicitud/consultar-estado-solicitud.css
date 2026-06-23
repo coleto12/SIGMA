@@ -1,0 +1,192 @@
+/* CONTAINER DE FILTROS SUPERIORES */
+.grid-filtros-consulta {
+    display: grid;
+    grid-template-columns: 1.2fr 1.5fr 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .input-date-custom {
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #334155;
+    background-color: #ffffff;
+  }
+  .btn-buscar-solicitud {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+  }
+  .btn-buscar-solicitud:hover {
+    background-color: #1d4ed8;
+  }
+  .align-self-end {
+    align-self: flex-end;
+  }
+  
+  /* COMPOSICIÓN DE INFORMACIÓN DEL ESTUDIANTE INTERNO */
+  .badge-id-solicitud {
+    background-color: #e2e8f0;
+    color: #0f172a;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .grid-info-estudiante-solicitud {
+    display: grid;
+    grid-template-columns: 1.2fr 1.2fr 1fr;
+    gap: 16px;
+  }
+  .pl-24 { padding-left: 24px; }
+  
+  /* COMPONENTES STEPPER HORIZONTAL (PROGRESO) */
+  .stepper-horizontal-container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 0 8px;
+  }
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 140px;
+    position: relative;
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    margin-bottom: 8px;
+    z-index: 2;
+  }
+  .step-line {
+    flex-grow: 1;
+    height: 2px;
+    background-color: #e2e8f0;
+    margin-top: 15px;
+  }
+  
+  /* Colores condicionales del Stepper */
+  .step-completed .step-circle { background-color: #d1fae5; color: #10b981; }
+  .step-active .step-circle { background-color: #fef3c7; color: #d97706; border: 2px solid #f59e0b; }
+  .step-pending .step-circle { background-color: #ffffff; color: #94a3b8; border: 2px solid #cbd5e1; }
+  .line-active { background-color: #f59e0b; }
+  
+  .step-name { font-size: 12px; color: #1e293b; }
+  .step-date { font-size: 10px; color: #64748b; margin-top: 2px; }
+  .step-dependency { font-size: 9px; color: #64748b; margin-top: 4px; line-height: 1.3; }
+  
+  .alert-amber-inner {
+    background-color: #fffbeb;
+    border: 1px solid #fef3c7;
+    padding: 12px 16px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* ACABADOS DE LA TABLA Y LEYENDAS */
+  .table-legend-container {
+    display: flex;
+    gap: 16px;
+    padding: 12px 24px;
+    background-color: #ffffff;
+    border-top: 1px solid #f1f5f9;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-success { background-color: #10b981; }
+  .dot-warning { background-color: #f59e0b; }
+  .dot-danger { background-color: #ef4444; }
+  .dot-pending { background-color: #94a3b8; }
+  
+  /* ASIDE METADATOS COMPLEMENTARIOS */
+  .alert-inner-gray-large {
+    background-color: #f8fafc;
+    padding: 16px;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .aside-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .max-width-150 { max-width: 150px; }
+  .text-right { text-align: right; }
+  
+  /* HISTORIAL TIMELINE VERTICAL DERECHO */
+  .vertical-timeline-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 8px;
+  }
+  .timeline-event-item {
+    display: flex;
+    gap: 16px;
+    border-left: 2px solid #e2e8f0;
+    padding-left: 16px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  .timeline-event-item.no-border {
+    border-left: 2px solid transparent;
+    padding-bottom: 0;
+  }
+  .timeline-marker-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    left: -6px;
+    top: 4px;
+    background-color: #cbd5e1;
+  }
+  .marker-warning { background-color: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
+  .marker-success { background-color: #10b981; box-shadow: 0 0 0 3px #d1fae5; }
+  .marker-gray { background-color: #94a3b8; }
+  
+  .timeline-event-content {
+    display: flex;
+    flex-direction: column;
+  }
+  .timeline-event-time { font-size: 10px; color: #94a3b8; }
+  .timeline-event-title { font-size: 12px; color: #1e293b; margin-top: 2px; }
+  .timeline-event-desc { font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.4; }
+  
+  /* MISCELÁNEO */
+  .bg-f0f9ff { background-color: #f0f9ff !important; }
+  .border-blue-link { border-color: #2563eb !important; }

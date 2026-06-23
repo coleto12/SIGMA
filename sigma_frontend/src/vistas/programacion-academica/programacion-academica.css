@@ -1,0 +1,12 @@
+.vista-programacion-academica__encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vista-programacion-academica__detalle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}

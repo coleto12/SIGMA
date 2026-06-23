@@ -1,0 +1,30 @@
+.matricula-oficial-container {
+  padding: 1.5rem 2rem;
+  max-width: 900px;
+}
+
+.matricula-oficial-header {
+  margin-bottom: 1.5rem;
+}
+
+.matricula-oficial-header h2 {
+  margin: 0 0 0.25rem;
+  color: #1f4e5f;
+}
+
+.matricula-oficial-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.matricula-oficial-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.matricula-oficial-acciones {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}

@@ -1,0 +1,538 @@
+/*ESTRUCTURA GENERAL (PANTALLA COMPLETA)*/
+   .auth-container {
+    display: grid;
+    grid-template-columns: 35vw 65vw; /* Proporción exacta izquierda/derecha */
+    min-height: 100vh;
+    width: 100vw;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #fcfcfc;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+  
+  /*PANEL IZQUIERDO (DISEÑO INTEGRADO)*/
+  .auth-left-panel {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-right: 1px solid #eef2f5;
+    box-sizing: border-box;
+  }
+  
+/* Sección azul superior con imagen de fondo y degradado oscuro uniforme */
+.auth-blue-section {
+  position: relative;
+  
+  /* CAMBIO AQUÍ: Convertimos el segundo color a RGBA con opacidad (0.85) para dejar ver la foto */
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.65) 0%, rgba(11, 19, 32, 0.88) 100%), 
+              url('/campus-unicartagena.jpg') center/cover no-repeat;
+              
+  padding: 3.5rem 2.5rem 7.5rem 2.5rem;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 4.5rem;
+  overflow: hidden;
+  
+  /* TIP EXTRA: Asegura que el contenedor tome el alto completo de la pantalla si estás en desktop */
+  min-height: 100vh; 
+  box-sizing: border-box;
+}
+  
+  /* Encabezado del panel izquierdo */
+  .auth-header-uni {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .auth-uni-logo {
+    width: 48px;
+    height: auto;
+    object-fit: contain;
+  }
+  
+  .auth-uni-text h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+  }
+  
+  .auth-uni-text span {
+    font-size: 0.8rem;
+    color: #d4af37; /* Dorado institucional */
+    font-weight: 600;
+  }
+  
+  /* Textos de bienvenida */
+  .auth-welcome-box .auth-welcome-text {
+    font-size: 1.35rem;
+    font-weight: 300;
+    margin: 0;
+    color: #ffffff;
+  }
+  
+  .auth-sigma-title {
+    color: #db9d24; /* Dorado brillante de la maqueta */
+    font-size: 3.8rem;
+    font-weight: 800;
+    margin: 0 0 0.4rem 0;
+    letter-spacing: 0.5px;
+  }
+  
+  .auth-sigma-desc {
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 90%;
+  }
+  
+  /* Generador de la curva inferior con borde dorado */
+  .auth-wave-decorator {
+    position: absolute;
+    bottom: -45px;
+    left: -10%;
+    width: 120%;
+    height: 90px;
+    background: #ffffff; /* Conecta con el fondo blanco de abajo */
+    border-top: 5px solid #db9d24; /* Línea divisoria dorada */
+    border-radius: 50%;
+  }
+  
+  /* Sección blanca de abajo */
+  .auth-white-section {
+    background-color: #ffffff;
+    padding: 2.5rem 2.5rem 3.5rem 2.5rem;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+  }
+  
+  .auth-benefit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+    width: 100%;
+  }
+  
+  .auth-benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+  
+  /* Círculos oscuros con borde dorado para los iconos */
+  .auth-icon-wrapper {
+    width: 46px;
+    height: 46px;
+    background-color: #0b1320;
+    border: 2px solid #db9d24;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 45%;
+  }
+  
+  /* SVG incrustados en CSS para que no dependas de archivos externos */
+  .shield-icon {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23db9d24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>');
+  }
+  
+  .people-icon {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23db9d24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>');
+  }
+  
+  .academic-icon {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23db9d24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>');
+  }
+  
+  /* Estabilización de los textos para que no se peguen */
+  .auth-benefit-content h3 {
+    margin: 0 0 0.15rem 0;
+    font-size: 1.05rem;
+    color: #0b1320;
+    font-weight: 700;
+  }
+  
+  .auth-benefit-content p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #555555;
+    line-height: 1.4;
+  }
+  
+  /* PANEL DERECHO (FORMULARIO Y CONTORNOS)*/
+  .auth-right-panel {
+    background-color: #f7f9fa;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2.5rem 4rem;
+    box-sizing: border-box;
+  }
+  
+  /* Link de ayuda superior derecho */
+  .auth-top-help {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: #333333;
+  }
+  
+  .auth-top-help a {
+    color: #db9d24;
+    text-decoration: none;
+    font-weight: 700;
+  }
+  
+  /* Tarjeta Blanca Flotante del Login */
+  .auth-card {
+    background-color: #ffffff;
+    max-width: 460px;
+    width: 100%;
+    margin: auto;
+    border-radius: 16px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.03);
+    border: 1px solid #eef1f4;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  
+  .auth-user-avatar {
+    width: 54px;
+    height: 54px;
+    background-color: #fffcf0;
+    border: 1px solid #f3deb3;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.2rem auto;
+  }
+  
+  .auth-card h2 {
+    font-size: 1.75rem;
+    color: #0b1320;
+    margin: 0 0 0.5rem 0;
+    font-weight: 700;
+  }
+  
+  .auth-card-subtitle {
+    font-size: 0.9rem;
+    color: #666666;
+    margin: 0 0 2rem 0;
+    line-height: 1.4;
+  }
+  
+  /* Grupos de entrada (Inputs) */
+  .auth-input-group {
+    text-align: left;
+    margin-bottom: 1.2rem;
+  }
+  
+  .auth-input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.4rem;
+  }
+  
+  .auth-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.75rem 0.85rem;
+    background-color: #ffffff;
+    gap: 0.7rem;
+  }
+  
+  .auth-input-wrapper:focus-within {
+    border-color: #db9d24;
+    box-shadow: 0 0 0 3px rgba(219, 157, 36, 0.1);
+  }
+  
+  .auth-input-icon, .auth-toggle-password {
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+  }
+  
+  .auth-input-wrapper input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.95rem;
+    color: #333333;
+  }
+  
+  /* Opciones extras */
+  .auth-form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    margin: 1.2rem 0 1.8rem 0;
+  }
+  
+  .auth-remember {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #4a5568;
+  }
+  
+  .auth-remember input {
+    accent-color: #db9d24; /* Hace que el checkbox sea dorado */
+  }
+  
+  .auth-forgot-link {
+    color: #db9d24;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  /* Botón Principal Dorado */
+  .auth-btn-primary {
+    width: 100%;
+    background-color: #db9d24;
+    color: #ffffff;
+    border: none;
+    padding: 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  
+  .auth-btn-primary:hover {
+    background-color: #c2881f;
+  }
+  
+  /* Separador "O continúa con" */
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    color: #a0aec0;
+    font-size: 0.8rem;
+    margin: 1.8rem 0;
+  }
+  
+  .auth-divider::before, .auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: #e2e8f0;
+  }
+  
+  .auth-divider span {
+    padding: 0 0.8rem;
+  }
+  
+  /* Botón Institucional Alternativo */
+  .auth-btn-institutional {
+    width: 100%;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0b1320;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  
+  .auth-btn-institutional:hover {
+    background-color: #f8fafc;
+  }
+  
+  .auth-btn-logo {
+    width: 22px;
+    height: auto;
+  }
+  
+  .auth-footer-note {
+    margin-top: 1.2rem;
+    font-size: 0.8rem;
+    color: #718096;
+  }
+  
+  /* Pie de Página general inferior */
+  .auth-main-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 1.2rem;
+    font-size: 0.8rem;
+    color: #718096;
+  }
+  
+  .auth-footer-links {
+    display: flex;
+    gap: 0.6rem;
+  }
+  
+  .auth-footer-links a {
+    color: #718096;
+    text-decoration: none;
+  }
+  
+  .auth-footer-links a:hover {
+    text-decoration: underline;
+  }
+
+  /* CONTENEDOR FLOTANTE CENTRALIZADO */
+.auth-screen-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 20px;
+}
+
+.auth-card-wrapper {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 32px;
+  box-sizing: border-box;
+}
+
+/* CABECERA CORPORATIVA DE LA TARJETA */
+.auth-card-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.auth-logo-badge .material-icons-outlined {
+  font-size: 28px;
+}
+
+.auth-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.025em;
+}
+
+.auth-card-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* SECCIÓN DEL FORMULARIO Y BOTONES */
+.auth-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-action-button-container {
+  margin-top: 8px;
+}
+
+/* Sobrecarga para el botón si se requiere ocupar todo el ancho */
+.boton-bloque-completo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 12px !important;
+}
+
+/* ENLACE DE RETORNO ESTILIZADO */
+.auth-card-footer {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+}
+
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.auth-back-link:hover {
+  color: #0f172a;
+}
+
+.auth-back-link .material-icons-outlined {
+  font-size: 16px;
+}
+  
+  /*OPTIMIZACIÓN RESPONSIVA (MÓVILES)*/
+  @media (max-width: 1024px) {
+    .auth-container {
+      grid-template-columns: 1fr;
+    }
+    .auth-left-panel {
+      display: none; /* Oculta limpiamente la barra informativa en celulares */
+    }
+    .auth-right-panel {
+      padding: 2rem 1.5rem;
+    }
+  }
+/* Mensaje de error de autenticación (agregado para conectar el login real) */
+.auth-error-message {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.auth-btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
