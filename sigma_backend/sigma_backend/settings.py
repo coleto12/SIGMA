@@ -233,6 +233,16 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+# Timeout corto y explícito: algunos proveedores de hosting (ej. Railway)
+# bloquean o filtran el tráfico saliente al puerto SMTP, lo que hace que
+# la conexión se quede colgada indefinidamente en vez de fallar rápido.
+# Sin este límite, eso puede agotar el WORKER TIMEOUT de Gunicorn y
+# matar el proceso completo que estaba atendiendo la petición HTTP
+# (ver bug real: aprobar una solicitud tumbaba el worker entero al
+# intentar enviar el correo de notificación). Con el timeout, el envío
+# de correo simplemente falla rápido y queda contenido por el
+# try/except de notificaciones/services.py, sin afectar el resto.
+EMAIL_TIMEOUT = 10
 
 # Si no hay credenciales configuradas (.env vacío), se cae a modo consola
 # para no romper el desarrollo local sin Gmail configurado.
