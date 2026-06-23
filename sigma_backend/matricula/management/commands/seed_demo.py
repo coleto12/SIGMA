@@ -20,7 +20,7 @@ from institucional.models import Campus, Facultad, NivelFormacion, ProgramaAcade
 from usuarios.models import Rol, Usuario, Estudiante, JefeDepartamento, Docente
 from academico.models import PeriodoAcademico, Asignatura, Prerrequisito, HistorialAcademico
 from programacion.models import ProgramacionAcademica, Salon, Grupo, HorarioGrupo
-from matricula.models import PeriodoMatricula
+from matricula.models import PeriodoMatricula, RequisitoDocumental
 
 
 class Command(BaseCommand):
@@ -239,9 +239,43 @@ class Command(BaseCommand):
             periodo_matricula.estado = 'publicado'
             periodo_matricula.save(update_fields=['estado'])
 
+        # -----------------------------------------------------------------
+        # 11) Requisitos documentales del periodo de matrícula
+        #    (cantidad y tipo definidos libremente por el Jefe de
+        #    Departamento; estos son solo un ejemplo de prueba)
+        # -----------------------------------------------------------------
+        requisito_certificado, _ = RequisitoDocumental.objects.get_or_create(
+            periodo_matricula=periodo_matricula,
+            nombre='Certificado de notas',
+            defaults={
+                'descripcion': 'Certificado de notas del último período cursado.',
+                'formato': 'PDF',
+            },
+        )
+        requisito_identidad, _ = RequisitoDocumental.objects.get_or_create(
+            periodo_matricula=periodo_matricula,
+            nombre='Documento de identidad',
+            defaults={
+                'descripcion': 'Copia del documento de identidad legible por ambas caras.',
+                'formato': 'PDF/JPG',
+            },
+        )
+        requisito_recibo, _ = RequisitoDocumental.objects.get_or_create(
+            periodo_matricula=periodo_matricula,
+            nombre='Recibo de pago de matrícula financiera',
+            defaults={
+                'descripcion': 'Comprobante de pago de la matrícula financiera del periodo.',
+                'formato': 'PDF',
+            },
+        )
+
         self.stdout.write(self.style.SUCCESS('\n=== Datos de prueba listos ==='))
         self.stdout.write(f'Estudiante: {estudiante.codigo} (usuario: {estudiante.usuario.correo})')
         self.stdout.write(f'Jefe de Departamento: {jefe_departamento.codigo} (usuario: {usuario_jefe.correo} / Jefe12345)')
         self.stdout.write(f'Grupo disponible para matricular: {grupo_prog2} (id={grupo_prog2.id}), cupo {grupo_prog2.cupo_disponible}')
         self.stdout.write(f'Grupo SIN prerrequisito cumplido (para prueba de rechazo): {grupo_calculo2} (id={grupo_calculo2.id})')
         self.stdout.write(f'Periodo de matrícula id={periodo_matricula.id} (vigente hasta {periodo_matricula.fecha_fin})')
+        self.stdout.write(
+            f'Requisitos documentales creados: {requisito_certificado.id}, '
+            f'{requisito_identidad.id}, {requisito_recibo.id}'
+        )

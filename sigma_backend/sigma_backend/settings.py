@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'programacion',
     'matricula',
     'notificaciones',
+    'auditoria',
 ]
 
 MIDDLEWARE = [
@@ -194,6 +195,11 @@ CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
     default='http://localhost:3000,http://127.0.0.1:3000'
 ).split(',')
+
+# URL base del frontend, usada para construir enlaces que se envían por
+# correo (ej. el enlace de restablecimiento de contraseña). En Vite el
+# puerto de desarrollo por defecto es 5173, no 3000.
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
 # -------------------------------------------------------------------
 # JWT (djangorestframework-simplejwt)

@@ -68,6 +68,12 @@ class PlanEstudioListCreateView(APIView):
 
     def get(self, request):
         planes = PlanEstudio.objects.select_related('programa_academico').all()
+        programa_id = request.query_params.get('programa_academico')
+        if programa_id:
+            planes = planes.filter(programa_academico_id=programa_id)
+        estado = request.query_params.get('estado')
+        if estado:
+            planes = planes.filter(estado=estado)
         serializer = PlanEstudioSerializer(planes, many=True)
         return Response(serializer.data)
 
@@ -113,6 +119,8 @@ class AsignaturaListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+        self.check_permissions(request)
         serializer = AsignaturaSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -129,7 +137,27 @@ class AsignaturaDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
+        self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+        self.check_permissions(request)
         asignatura = get_object_or_404(Asignatura, pk=pk)
+
+        # Mismo criterio que en la carga CSV: un Jefe de Departamento
+        # solo puede editar una asignatura existente si pertenece a SU
+        # PROPIO plan de estudios vigente. Un Administrador no tiene
+        # esta restricción.
+        jefe = getattr(request.user, 'jefe_departamento', None)
+        if jefe is not None:
+            pertenece_a_mi_plan = PlanEstudioAsignatura.objects.filter(
+                asignatura=asignatura,
+                plan_estudio__programa_academico_id=jefe.programa_academico_id,
+                plan_estudio__estado='vigente',
+            ).exists()
+            if not pertenece_a_mi_plan:
+                return Response(
+                    {'detail': 'No puedes editar una asignatura que no pertenece a tu plan de estudios.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         serializer = AsignaturaSerializer(asignatura, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -137,7 +165,23 @@ class AsignaturaDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
+        self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+        self.check_permissions(request)
         asignatura = get_object_or_404(Asignatura, pk=pk)
+
+        jefe = getattr(request.user, 'jefe_departamento', None)
+        if jefe is not None:
+            pertenece_a_mi_plan = PlanEstudioAsignatura.objects.filter(
+                asignatura=asignatura,
+                plan_estudio__programa_academico_id=jefe.programa_academico_id,
+                plan_estudio__estado='vigente',
+            ).exists()
+            if not pertenece_a_mi_plan:
+                return Response(
+                    {'detail': 'No puedes eliminar una asignatura que no pertenece a tu plan de estudios.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         asignatura.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -146,7 +190,7 @@ class AsignaturaDetailView(APIView):
 # PlanEstudioAsignatura
 # ---------------------------------------------------------------------------
 class PlanEstudioAsignaturaListCreateView(APIView):
-    permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         items = PlanEstudioAsignatura.objects.select_related('plan_estudio', 'asignatura').all()
@@ -157,6 +201,8 @@ class PlanEstudioAsignaturaListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+        self.check_permissions(request)
         serializer = PlanEstudioAsignaturaSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -165,7 +211,7 @@ class PlanEstudioAsignaturaListCreateView(APIView):
 
 
 class PlanEstudioAsignaturaDetailView(APIView):
-    permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         item = get_object_or_404(PlanEstudioAsignatura, pk=pk)
@@ -173,6 +219,8 @@ class PlanEstudioAsignaturaDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
+        self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+        self.check_permissions(request)
         item = get_object_or_404(PlanEstudioAsignatura, pk=pk)
         serializer = PlanEstudioAsignaturaSerializer(item, data=request.data, partial=True)
         if serializer.is_valid():
@@ -181,6 +229,8 @@ class PlanEstudioAsignaturaDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
+        self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+        self.check_permissions(request)
         item = get_object_or_404(PlanEstudioAsignatura, pk=pk)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -247,6 +297,14 @@ class HistorialAcademicoListCreateView(APIView):
             # qué filtro intente pasar por query params.
             items = items.filter(estudiante__usuario=request.user)
         else:
+            # Un Jefe de Departamento solo ve historial de estudiantes
+            # de SU PROPIO programa académico (nunca el de otra carrera,
+            # ni siquiera pasando el id de un estudiante ajeno por query
+            # param). Un Administrador (sin jefe_departamento) sí ve todo.
+            jefe = getattr(request.user, 'jefe_departamento', None)
+            if jefe is not None:
+                items = items.filter(estudiante__programa_academico_id=jefe.programa_academico_id)
+
             estudiante_id = request.query_params.get('estudiante')
             if estudiante_id:
                 items = items.filter(estudiante_id=estudiante_id)

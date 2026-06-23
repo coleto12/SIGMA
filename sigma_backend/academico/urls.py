@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import carga_csv
 
 urlpatterns = [
     path('periodos-academicos/', views.PeriodoAcademicoListCreateView.as_view(), name='periodo-academico-list-create'),
@@ -19,4 +20,9 @@ urlpatterns = [
 
     path('historial-academico/', views.HistorialAcademicoListCreateView.as_view(), name='historial-academico-list-create'),
     path('historial-academico/<int:pk>/', views.HistorialAcademicoDetailView.as_view(), name='historial-academico-detail'),
+
+    # Carga de Información Académica vía CSV (CU02)
+    path('cargar/asignaturas/', carga_csv.CargarAsignaturasView.as_view(), name='cargar-asignaturas'),
+    path('cargar/plan-estudio/', carga_csv.CargarPlanEstudioView.as_view(), name='cargar-plan-estudio'),
+    path('cargar/historial-academico/', carga_csv.CargarHistorialAcademicoView.as_view(), name='cargar-historial-academico'),
 ]

@@ -37,12 +37,37 @@ class SigmaTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
-    """Representación de Usuario para lectura (nunca expone el password)."""
+    """
+    Representación de Usuario para lectura (nunca expone el password).
+    Incluye 'estudiante_id' (o None) para que el frontend pueda obtener
+    el id del registro Estudiante asociado al usuario autenticado, y
+    'programa_academico_id' (o None) para que un Jefe de Departamento
+    pueda saber a qué programa académico pertenece sin necesitar acceso
+    al listado completo de estudiantes/jefes (restringido por rol).
+    """
     rol_nombre = serializers.CharField(source='rol.nombre', read_only=True)
+    estudiante_id = serializers.SerializerMethodField()
+    programa_academico_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Usuario
-        fields = ['id', 'correo', 'rol', 'rol_nombre', 'is_active']
+        fields = [
+            'id', 'correo', 'rol', 'rol_nombre', 'is_active',
+            'estudiante_id', 'programa_academico_id',
+        ]
+
+    def get_estudiante_id(self, obj):
+        estudiante = getattr(obj, 'estudiante', None)
+        return estudiante.id if estudiante else None
+
+    def get_programa_academico_id(self, obj):
+        jefe = getattr(obj, 'jefe_departamento', None)
+        if jefe:
+            return jefe.programa_academico_id
+        estudiante = getattr(obj, 'estudiante', None)
+        if estudiante:
+            return estudiante.programa_academico_id
+        return None
 
 
 class EstudianteSerializer(serializers.ModelSerializer):

@@ -9,6 +9,7 @@ Incluye el flujo de negocio completo:
   del Grupo, y se genera la MatriculaOficial (PDF) automáticamente.
 """
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -57,7 +58,16 @@ class PeriodoMatriculaListCreateView(APIView):
     def post(self, request):
         self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
         self.check_permissions(request)
-        serializer = PeriodoMatriculaSerializer(data=request.data)
+
+        # Mismo criterio que ProgramacionAcademicaListCreateView: no se
+        # confía en lo que el cliente envíe para 'jefe_departamento', se
+        # toma siempre del usuario autenticado si es Jefe de Departamento.
+        datos = request.data.copy()
+        jefe_departamento = getattr(request.user, 'jefe_departamento', None)
+        if jefe_departamento is not None:
+            datos['jefe_departamento'] = jefe_departamento.id
+
+        serializer = PeriodoMatriculaSerializer(data=datos)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -76,6 +86,18 @@ class PeriodoMatriculaDetailView(APIView):
         self.permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
         self.check_permissions(request)
         item = get_object_or_404(PeriodoMatricula, pk=pk)
+
+        # No se permite modificar fechas/requisitos si ya está publicado,
+        # salvo que la petición sea exactamente para reabrirlo (ver
+        # PeriodoMatriculaReabrirView). Esto cierra el hueco de que antes
+        # solo el frontend bloqueaba la edición tras publicar, pero la
+        # API en sí no validaba nada.
+        if item.estado == 'publicado':
+            return Response(
+                {'detail': 'No se puede modificar un periodo de matrícula ya publicado. Primero debes reabrirlo.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = PeriodoMatriculaSerializer(item, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -88,6 +110,49 @@ class PeriodoMatriculaDetailView(APIView):
         item = get_object_or_404(PeriodoMatricula, pk=pk)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PeriodoMatriculaReabrirView(APIView):
+    """
+    POST /api/matricula/periodos-matricula/<pk>/reabrir/
+
+    Permite al Jefe de Departamento volver a abrir para edición un
+    periodo de matrícula ya publicado, pero SOLO después de que su
+    fecha_fin ya haya pasado (protege el proceso de matrícula mientras
+    todavía está activo y en uso por los estudiantes). Al reabrir, el
+    estado vuelve a 'no_publicado'; las fechas y requisitos documentales
+    quedan editables de nuevo, y para que los estudiantes puedan volver
+    a solicitar, el Jefe deberá publicarlo otra vez (con una fecha_fin
+    actualizada).
+    """
+    permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
+
+    def post(self, request, pk):
+        periodo = get_object_or_404(PeriodoMatricula, pk=pk)
+
+        if periodo.estado != 'publicado':
+            return Response(
+                {'detail': 'Este periodo de matrícula no está publicado.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        hoy = timezone.localdate()
+        if hoy <= periodo.fecha_fin:
+            return Response(
+                {
+                    'detail': (
+                        f'No puedes reabrir este periodo todavía: el plazo de solicitudes '
+                        f'termina el {periodo.fecha_fin}. Podrás reabrirlo a partir del día siguiente.'
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        periodo.estado = 'no_publicado'
+        periodo.save(update_fields=['estado', 'updated_at'])
+
+        serializer = PeriodoMatriculaSerializer(periodo)
+        return Response(serializer.data)
 
 
 # ---------------------------------------------------------------------------
@@ -147,6 +212,13 @@ class SolicitudMatriculaListCreateView(APIView):
         if not _es_jefe_o_admin(request):
             items = items.filter(estudiante__usuario=request.user)
         else:
+            # Un Jefe de Departamento solo ve solicitudes de estudiantes
+            # de SU PROPIO programa académico (mismo criterio aplicado
+            # ya a HistorialAcademico). Un Administrador ve todas.
+            jefe = getattr(request.user, 'jefe_departamento', None)
+            if jefe is not None:
+                items = items.filter(estudiante__programa_academico_id=jefe.programa_academico_id)
+
             estudiante_id = request.query_params.get('estudiante')
             if estudiante_id:
                 items = items.filter(estudiante_id=estudiante_id)
@@ -214,14 +286,73 @@ class SolicitudMatriculaDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class SolicitudMatriculaConfirmarEnvioView(APIView):
+    """
+    POST /api/matricula/solicitudes-matricula/<pk>/confirmar-envio/
+
+    Marca la solicitud como 'enviada formalmente' (ver CU13 paso final,
+    CU19 y CU20: una vez confirmado el envío, el Estudiante ya no puede
+    modificar las asignaturas seleccionadas ni los documentos adjuntos;
+    solo el Jefe de Departamento puede actuar sobre ella desde ahí).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        solicitud = get_object_or_404(SolicitudMatricula, pk=pk)
+
+        if not _es_propietario_o_jefe(request, solicitud.estudiante):
+            return Response(
+                {'detail': 'No puedes confirmar el envío de la solicitud de otro estudiante.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if solicitud.enviada_formalmente:
+            return Response(
+                {'detail': 'Esta solicitud ya fue enviada formalmente.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if solicitud.estado != 'pendiente_revision':
+            return Response(
+                {'detail': 'Solo se puede confirmar el envío de una solicitud pendiente de revisión.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        asignaturas_count = solicitud.asignaturas_solicitadas.count()
+        if asignaturas_count == 0:
+            return Response(
+                {'detail': 'Debes seleccionar al menos una asignatura antes de enviar tu solicitud.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        solicitud.enviada_formalmente = True
+        solicitud.save(update_fields=['enviada_formalmente', 'updated_at'])
+
+        serializer = SolicitudMatriculaSerializer(solicitud)
+        return Response(serializer.data)
+
+
 class SolicitudMatriculaAprobarView(APIView):
     """
     POST /api/matricula/solicitudes-matricula/<pk>/aprobar/
+    body opcional: {"confirmar_reemplazos": true}
 
     Flujo (ver Modelo de Negocio - Gestión de Matrícula Académica):
     1) Valida que la solicitud esté pendiente_revision.
-    2) Valida que cada grupo solicitado tenga cupo_disponible > 0.
-    3) Descuenta cupo_disponible de cada Grupo.
+    2) Por cada asignatura solicitada, detecta si el estudiante YA tiene
+       esa misma asignatura aprobada en OTRA solicitud de este mismo
+       periodo (de un intento anterior, ver num_intento):
+         - Si es el MISMO grupo: no hay conflicto, simplemente no se
+           vuelve a descontar cupo (ya lo estaba ocupando).
+         - Si es OTRO grupo: es un "reemplazo de horario". Si el body
+           no trae confirmar_reemplazos=true, se devuelve 409 con el
+           detalle de qué se reemplazaría, SIN aprobar nada todavía.
+           Si confirmar_reemplazos=true, se libera el cupo del grupo
+           viejo, se descuenta el del nuevo, y se actualiza el 'grupo'
+           de la SolicitudAsignatura de la solicitud anterior para que
+           apunte al nuevo grupo (esa solicitud anterior se queda como
+           'aprobada', solo cambia internamente a qué grupo apunta).
+    3) Para asignaturas sin conflicto, valida cupo y descuenta normal.
     4) Marca la solicitud como 'aprobada'.
     5) Genera la MatriculaOficial (PDF) automáticamente.
     Todo dentro de una transacción: si algo falla, no se deja nada a medias.
@@ -231,6 +362,16 @@ class SolicitudMatriculaAprobarView(APIView):
     @transaction.atomic
     def post(self, request, pk):
         solicitud = get_object_or_404(SolicitudMatricula, pk=pk)
+        confirmar_reemplazos = bool(request.data.get('confirmar_reemplazos'))
+
+        # Un Jefe de Departamento solo puede aprobar solicitudes de
+        # estudiantes de SU PROPIO programa académico.
+        jefe = getattr(request.user, 'jefe_departamento', None)
+        if jefe is not None and solicitud.estudiante.programa_academico_id != jefe.programa_academico_id:
+            return Response(
+                {'detail': 'No puedes aprobar solicitudes de estudiantes de otro programa académico.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if solicitud.estado != 'pendiente_revision':
             return Response(
@@ -239,7 +380,7 @@ class SolicitudMatriculaAprobarView(APIView):
             )
 
         asignaturas = list(
-            solicitud.asignaturas_solicitadas.select_related('grupo').all()
+            solicitud.asignaturas_solicitadas.select_related('grupo', 'grupo__asignatura').all()
         )
         if not asignaturas:
             return Response(
@@ -247,10 +388,66 @@ class SolicitudMatriculaAprobarView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validar cupo disponible de TODOS los grupos antes de descontar nada.
-        sin_cupo = [
-            sa.grupo for sa in asignaturas if sa.grupo.cupo_disponible <= 0
-        ]
+        # -----------------------------------------------------------
+        # Detectar, por cada asignatura, si el estudiante ya la tiene
+        # aprobada en OTRA solicitud de este mismo periodo de matrícula
+        # (de un intento anterior), y en qué grupo.
+        # -----------------------------------------------------------
+        otras_aprobadas_del_periodo = SolicitudAsignatura.objects.filter(
+            solicitud_matricula__estudiante=solicitud.estudiante,
+            solicitud_matricula__periodo_matricula=solicitud.periodo_matricula,
+            solicitud_matricula__estado='aprobada',
+        ).exclude(solicitud_matricula=solicitud).select_related('grupo', 'grupo__asignatura', 'solicitud_matricula')
+
+        aprobada_previa_por_asignatura = {}
+        for sa_previa in otras_aprobadas_del_periodo:
+            aprobada_previa_por_asignatura[sa_previa.grupo.asignatura_id] = sa_previa
+
+        asignaturas_sin_conflicto = []
+        reemplazos_a_confirmar = []  # (sa_nueva, sa_vieja) cuando cambia de grupo
+        reemplazos_mismo_grupo = []  # sa_nueva cuando es exactamente el mismo grupo
+
+        for sa in asignaturas:
+            sa_previa = aprobada_previa_por_asignatura.get(sa.grupo.asignatura_id)
+            if sa_previa is None:
+                asignaturas_sin_conflicto.append(sa)
+            elif sa_previa.grupo_id == sa.grupo_id:
+                reemplazos_mismo_grupo.append(sa)
+            else:
+                reemplazos_a_confirmar.append((sa, sa_previa))
+
+        # Si hay reemplazos de GRUPO DISTINTO y el Jefe todavía no confirmó,
+        # se detiene aquí sin aprobar nada, devolviendo el detalle para que
+        # el frontend pueda mostrar la advertencia y pedir confirmación.
+        if reemplazos_a_confirmar and not confirmar_reemplazos:
+            detalle_reemplazos = [
+                {
+                    'asignatura_codigo': sa_nueva.grupo.asignatura.codigo,
+                    'asignatura_nombre': sa_nueva.grupo.asignatura.nombre,
+                    'grupo_anterior': sa_vieja.grupo.nombre,
+                    'grupo_nuevo': sa_nueva.grupo.nombre,
+                    'solicitud_anterior_id': sa_vieja.solicitud_matricula_id,
+                }
+                for sa_nueva, sa_vieja in reemplazos_a_confirmar
+            ]
+            return Response(
+                {
+                    'detail': (
+                        'Este estudiante ya tiene matriculadas algunas de estas asignaturas '
+                        'en un grupo distinto, dentro de este mismo periodo. ¿Deseas reemplazar '
+                        'el horario anterior por el nuevo?'
+                    ),
+                    'requiere_confirmacion': True,
+                    'reemplazos': detalle_reemplazos,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        # Validar cupo disponible solo de los grupos que SÍ van a
+        # descontar cupo nuevo (sin conflicto, o reemplazo confirmado).
+        grupos_a_descontar = [sa.grupo for sa in asignaturas_sin_conflicto]
+        grupos_a_descontar += [sa_nueva.grupo for sa_nueva, _ in reemplazos_a_confirmar]
+        sin_cupo = [g for g in grupos_a_descontar if g.cupo_disponible <= 0]
         if sin_cupo:
             nombres = ', '.join(f'{g.asignatura.codigo} (grupo {g.nombre})' for g in sin_cupo)
             return Response(
@@ -258,11 +455,31 @@ class SolicitudMatriculaAprobarView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Descontar cupo de cada grupo.
-        for sa in asignaturas:
+        # Descontar cupo de las asignaturas sin conflicto (caso normal).
+        for sa in asignaturas_sin_conflicto:
             grupo = sa.grupo
             grupo.cupo_disponible -= 1
             grupo.save(update_fields=['cupo_disponible'])
+
+        # Asignaturas que coinciden con el MISMO grupo de una aprobación
+        # previa: no se vuelve a descontar cupo (el estudiante ya lo
+        # ocupaba desde el intento anterior).
+
+        # Reemplazos confirmados: liberar cupo del grupo viejo, descontar
+        # el del nuevo, y mover la SolicitudAsignatura vieja al nuevo grupo
+        # (la solicitud anterior se queda 'aprobada', solo cambia su grupo).
+        for sa_nueva, sa_vieja in reemplazos_a_confirmar:
+            grupo_viejo = sa_vieja.grupo
+            grupo_nuevo = sa_nueva.grupo
+
+            grupo_viejo.cupo_disponible += 1
+            grupo_viejo.save(update_fields=['cupo_disponible'])
+
+            grupo_nuevo.cupo_disponible -= 1
+            grupo_nuevo.save(update_fields=['cupo_disponible'])
+
+            sa_vieja.grupo = grupo_nuevo
+            sa_vieja.save(update_fields=['grupo'])
 
         solicitud.estado = 'aprobada'
         solicitud.motivo_rechazo = None
@@ -282,12 +499,22 @@ class SolicitudMatriculaAprobarView(APIView):
             tipo_evento='solicitud_aprobada',
             mensaje=f'Tu solicitud de matrícula #{solicitud.pk} fue aprobada.',
         )
+        # No se adjunta el PDF directamente al correo: muchos servidores
+        # de correo institucionales (ej. unicartagena.edu.co) bloquean o
+        # descartan silenciosamente correos con adjuntos PDF provenientes
+        # de remitentes externos, por políticas anti-malware (ver bug
+        # real encontrado: el correo se "enviaba" exitosamente del lado
+        # de Gmail, pero nunca llegaba a la bandeja institucional). En su
+        # lugar, se envía el enlace directo de descarga del documento ya
+        # almacenado (Cloudinary), evitando ese filtro por completo.
         notificar(
             usuario=solicitud.estudiante.usuario,
             tipo_evento='matricula_generada',
             mensaje=(
                 f'Tu matrícula oficial para el periodo '
-                f'{solicitud.periodo_matricula.periodo_academico.nombre} ya está disponible.'
+                f'{solicitud.periodo_matricula.periodo_academico.nombre} ya está disponible. '
+                f'Puedes descargarla aquí: {matricula_oficial.documento.url}\n\n'
+                'También puedes consultarla en cualquier momento desde SIGMA.'
             ),
         )
 
@@ -304,6 +531,13 @@ class SolicitudMatriculaRechazarView(APIView):
 
     def post(self, request, pk):
         solicitud = get_object_or_404(SolicitudMatricula, pk=pk)
+
+        jefe = getattr(request.user, 'jefe_departamento', None)
+        if jefe is not None and solicitud.estudiante.programa_academico_id != jefe.programa_academico_id:
+            return Response(
+                {'detail': 'No puedes rechazar solicitudes de estudiantes de otro programa académico.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if solicitud.estado != 'pendiente_revision':
             return Response(
@@ -391,6 +625,11 @@ class SolicitudAsignaturaDetailView(APIView):
                 {'detail': 'Solo se pueden quitar asignaturas de una solicitud pendiente de revisión.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if item.solicitud_matricula.enviada_formalmente:
+            return Response(
+                {'detail': 'Esta solicitud ya fue enviada formalmente y no puede modificarse.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -448,6 +687,11 @@ class DocumentoAdjuntoDetailView(APIView):
             return Response(
                 {'detail': 'No tienes acceso a este recurso.'},
                 status=status.HTTP_403_FORBIDDEN,
+            )
+        if item.solicitud_matricula.enviada_formalmente:
+            return Response(
+                {'detail': 'Esta solicitud ya fue enviada formalmente; no puedes modificar sus documentos.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

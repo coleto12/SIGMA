@@ -8,8 +8,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.conf import settings
 
-from .models import Estudiante, JefeDepartamento, Docente
+from .models import Estudiante, JefeDepartamento, Docente, Usuario
 from .serializers import (
     SigmaTokenObtainPairSerializer, UsuarioSerializer,
     EstudianteSerializer, JefeDepartamentoSerializer, DocenteSerializer,
@@ -186,3 +190,98 @@ class DocenteDetailView(APIView):
         docente = get_object_or_404(Docente, pk=pk)
         docente.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ---------------------------------------------------------------------------
+# Recuperación de contraseña
+# ---------------------------------------------------------------------------
+_generador_token_reset = PasswordResetTokenGenerator()
+
+
+class SolicitarRecuperacionContrasenaView(APIView):
+    """
+    POST /api/usuarios/recuperar-contrasena/
+    body: {"correo": "..."}
+
+    Genera un enlace de restablecimiento y lo envía por correo. Por
+    seguridad (no revelar si un correo existe o no en el sistema), esta
+    vista SIEMPRE responde 200 con el mismo mensaje genérico, exista o
+    no una cuenta con ese correo; si existe, además dispara el envío
+    real del correo en segundo plano de la misma petición.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        correo = (request.data.get('correo') or '').strip().lower()
+        if not correo:
+            return Response({'detail': 'Debes indicar tu correo institucional.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        usuario = Usuario.objects.filter(correo=correo).first()
+        if usuario is not None:
+            uid = urlsafe_base64_encode(force_bytes(usuario.pk))
+            token = _generador_token_reset.make_token(usuario)
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+            enlace = f'{frontend_url}/restablecer-contrasena/{uid}/{token}'
+
+            from notificaciones.services import _enviar_correo
+            _enviar_correo(
+                usuario=usuario,
+                tipo_evento='recuperacion_contrasena',
+                mensaje=(
+                    'Recibimos una solicitud para restablecer tu contraseña en SIGMA.\n\n'
+                    f'Si fuiste tú, ingresa a este enlace para crear una nueva contraseña:\n{enlace}\n\n'
+                    'Este enlace expira en unos días. Si no solicitaste este cambio, '
+                    'puedes ignorar este correo.'
+                ),
+            )
+
+        # Mensaje idéntico exista o no el correo, para no filtrar qué
+        # correos están registrados en el sistema.
+        return Response({
+            'detail': 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.',
+        })
+
+
+class ConfirmarRecuperacionContrasenaView(APIView):
+    """
+    POST /api/usuarios/restablecer-contrasena/
+    body: {"uid": "...", "token": "...", "nueva_contrasena": "..."}
+
+    Valida el uid/token generados en SolicitarRecuperacionContrasenaView
+    y, si son válidos y no han expirado, actualiza la contraseña.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+        nueva_contrasena = request.data.get('nueva_contrasena') or ''
+
+        if not uid or not token or not nueva_contrasena:
+            return Response(
+                {'detail': 'Faltan datos para restablecer la contraseña.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(nueva_contrasena) < 8:
+            return Response(
+                {'detail': 'La nueva contraseña debe tener al menos 8 caracteres.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            pk = force_str(urlsafe_base64_decode(uid))
+            usuario = Usuario.objects.get(pk=pk)
+        except (TypeError, ValueError, OverflowError, Usuario.DoesNotExist):
+            usuario = None
+
+        if usuario is None or not _generador_token_reset.check_token(usuario, token):
+            return Response(
+                {'detail': 'El enlace de restablecimiento no es válido o ya expiró. Solicita uno nuevo.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        usuario.set_password(nueva_contrasena)
+        usuario.save(update_fields=['password'])
+
+        return Response({'detail': 'Tu contraseña fue restablecida exitosamente. Ya puedes iniciar sesión.'})

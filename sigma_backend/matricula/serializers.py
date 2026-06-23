@@ -3,10 +3,13 @@ Serializers del bloque Matrícula Académica.
 
 Contiene la lógica de validación más importante del sistema:
 - SolicitudAsignaturaSerializer valida, al agregar cada asignatura:
-  1) que el periodo de matrícula esté publicado y dentro de fechas,
-  2) que el estudiante cumpla los prerrequisitos académicos de la
+  1) que la asignatura no esté ya aprobada en el historial del estudiante
+     (ver Modelo de Negocio 4.3.2 - Elegibilidad de matrícula basada en
+     historia: no se puede volver a cursar lo ya aprobado),
+  2) que el periodo de matrícula esté publicado y dentro de fechas,
+  3) que el estudiante cumpla los prerrequisitos académicos de la
      asignatura (contra HistorialAcademico, estado 'aprobada'),
-  3) que el horario del grupo no se cruce con otro grupo ya presente
+  4) que el horario del grupo no se cruce con otro grupo ya presente
      en la MISMA solicitud de matrícula.
 
 El control de cupo disponible NO se valida aquí (se decidió que el cupo
@@ -47,16 +50,17 @@ class RequisitoDocumentalSerializer(serializers.ModelSerializer):
 class SolicitudMatriculaSerializer(serializers.ModelSerializer):
     estudiante_codigo = serializers.CharField(source='estudiante.codigo', read_only=True)
     estudiante_nombre = serializers.CharField(source='estudiante.nombre_completo', read_only=True)
+    periodo_matricula_nombre = serializers.CharField(source='periodo_matricula.periodo_academico.nombre', read_only=True)
 
     class Meta:
         model = SolicitudMatricula
         fields = [
-            'id', 'num_intento', 'estado', 'motivo_rechazo',
+            'id', 'num_intento', 'estado', 'motivo_rechazo', 'enviada_formalmente',
             'created_at', 'updated_at',
             'estudiante', 'estudiante_codigo', 'estudiante_nombre',
-            'periodo_matricula',
+            'periodo_matricula', 'periodo_matricula_nombre',
         ]
-        read_only_fields = ['num_intento', 'estado', 'motivo_rechazo', 'created_at', 'updated_at']
+        read_only_fields = ['num_intento', 'estado', 'motivo_rechazo', 'enviada_formalmente', 'created_at', 'updated_at']
 
     def validate_periodo_matricula(self, periodo_matricula):
         if periodo_matricula.estado != 'publicado':
@@ -108,8 +112,29 @@ class SolicitudAsignaturaSerializer(serializers.ModelSerializer):
                 'Solo se pueden agregar asignaturas a una solicitud pendiente de revisión.'
             )
 
+        if solicitud.enviada_formalmente:
+            raise serializers.ValidationError(
+                'Esta solicitud ya fue enviada formalmente y no puede modificarse. '
+                'Espera la revisión del Jefe de Departamento.'
+            )
+
         asignatura = grupo.asignatura
         estudiante = solicitud.estudiante
+
+        # --- 0) Elegibilidad por historial (ver Modelo de Negocio 4.3.2):
+        # un estudiante no puede volver a matricular una asignatura que ya
+        # tiene aprobada en su historial académico. Sí puede reintentarla
+        # si la reprobó, o si nunca la ha cursado.
+        ya_aprobada = HistorialAcademico.objects.filter(
+            estudiante=estudiante,
+            asignatura=asignatura,
+            estado='aprobada',
+        ).exists()
+        if ya_aprobada:
+            raise serializers.ValidationError(
+                f'Ya aprobaste la asignatura "{asignatura.codigo} - {asignatura.nombre}" '
+                'en un periodo anterior; no puedes volver a matricularla.'
+            )
 
         # --- 1) Validación de prerrequisitos (contra HistorialAcademico) ---
         prerrequisitos = Prerrequisito.objects.filter(asignatura=asignatura)
@@ -148,6 +173,33 @@ class SolicitudAsignaturaSerializer(serializers.ModelSerializer):
                             f'el {h_nuevo.dia_semana}.'
                         )
 
+        # --- 3) Límite máximo de créditos por solicitud de matrícula ---
+        # No está exigido explícitamente por el Modelo de Negocio, pero es
+        # una regla razonable de carga académica por periodo (referencia:
+        # ~4 asignaturas de 2-4 créditos cada una, equivalentes a un
+        # semestre normal del plan de estudios).
+        MAXIMO_CREDITOS_POR_SOLICITUD = 12
+
+        def _creditos_en_plan_del_estudiante(asig):
+            fila_plan = asig.planes_asignatura.filter(
+                plan_estudio__programa_academico=estudiante.programa_academico,
+                plan_estudio__estado='vigente',
+            ).first()
+            return fila_plan.creditos if fila_plan else 0
+
+        creditos_actuales = sum(
+            _creditos_en_plan_del_estudiante(otra.grupo.asignatura) for otra in otras_asignaturas
+        )
+        creditos_nueva = _creditos_en_plan_del_estudiante(asignatura)
+
+        if creditos_actuales + creditos_nueva > MAXIMO_CREDITOS_POR_SOLICITUD:
+            raise serializers.ValidationError(
+                f'No puedes matricular "{asignatura.codigo} - {asignatura.nombre}" '
+                f'({creditos_nueva} créditos): superarías el máximo de '
+                f'{MAXIMO_CREDITOS_POR_SOLICITUD} créditos por solicitud '
+                f'(llevas {creditos_actuales} créditos seleccionados).'
+            )
+
         return attrs
 
 
@@ -163,6 +215,11 @@ class DocumentoAdjuntoSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'version']
 
     def create(self, validated_data):
+        solicitud = validated_data['solicitud_matricula']
+        if solicitud.enviada_formalmente:
+            raise serializers.ValidationError(
+                'Esta solicitud ya fue enviada formalmente; no puedes modificar sus documentos.'
+            )
         # Si ya existe un documento para el mismo requisito en la misma
         # solicitud, este nuevo se guarda con version incrementada (no
         # se sobrescribe el anterior, queda como historial).
@@ -176,11 +233,16 @@ class DocumentoAdjuntoSerializer(serializers.ModelSerializer):
 
 class MatriculaOficialSerializer(serializers.ModelSerializer):
     estudiante_codigo = serializers.CharField(source='solicitud_matricula.estudiante.codigo', read_only=True)
+    estudiante_nombre = serializers.CharField(source='solicitud_matricula.estudiante.nombre_completo', read_only=True)
+    periodo_academico_nombre = serializers.CharField(
+        source='solicitud_matricula.periodo_matricula.periodo_academico.nombre', read_only=True
+    )
 
     class Meta:
         model = MatriculaOficial
         fields = [
             'id', 'documento', 'fecha_emision',
-            'solicitud_matricula', 'estudiante_codigo', 'jefe_departamento',
+            'solicitud_matricula', 'estudiante_codigo', 'estudiante_nombre',
+            'periodo_academico_nombre', 'jefe_departamento',
         ]
         read_only_fields = ['documento', 'fecha_emision']

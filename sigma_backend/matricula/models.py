@@ -15,6 +15,20 @@ from usuarios.models import Estudiante, JefeDepartamento
 from academico.models import PeriodoAcademico
 from programacion.models import Grupo
 
+# Los PDFs (matrícula oficial, documentos adjuntos) deben subirse a
+# Cloudinary como recurso tipo 'raw', no 'image' (el storage por defecto
+# de django-cloudinary-storage). Si se suben como 'image', Cloudinary
+# responde 401 Unauthorized al intentar leerlos de vuelta (ver bug real
+# encontrado: error al adjuntar el PDF de matrícula en el correo).
+# Si Cloudinary no está configurado (desarrollo local), FileField usa el
+# storage por defecto (FileSystemStorage) sin problema.
+try:
+    from cloudinary_storage.storage import RawMediaCloudinaryStorage
+    from django.conf import settings as _settings
+    _storage_pdf = RawMediaCloudinaryStorage() if _settings.CLOUDINARY_STORAGE.get('CLOUD_NAME') else None
+except Exception:
+    _storage_pdf = None
+
 
 class PeriodoMatricula(models.Model):
     ESTADO_CHOICES = [
@@ -82,6 +96,15 @@ class SolicitudMatricula(models.Model):
     num_intento = models.PositiveIntegerField(default=1)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
     motivo_rechazo = models.TextField(null=True, blank=True)
+    # Distingue "borrador" (el Estudiante todavía está seleccionando
+    # asignaturas/documentos, puede modificar todo libremente, ver CU19
+    # y CU20) de "enviada formalmente" (el Estudiante ya confirmó el
+    # envío en el paso final del formulario; a partir de ahí el sistema
+    # no debe permitir modificar asignaturas ni documentos, solo el
+    # Jefe de Departamento puede actuar sobre ella). Es independiente
+    # de 'estado': una solicitud puede estar en borrador y en estado
+    # 'pendiente_revision' a la vez, mientras el Estudiante la completa.
+    enviada_formalmente = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     estudiante = models.ForeignKey(
@@ -138,7 +161,7 @@ def ruta_documento_adjunto(instance, filename):
 
 class DocumentoAdjunto(models.Model):
     nombre_archivo = models.CharField(max_length=255)
-    archivo = models.FileField(upload_to=ruta_documento_adjunto, max_length=500)
+    archivo = models.FileField(upload_to=ruta_documento_adjunto, max_length=500, storage=_storage_pdf)
     created_at = models.DateTimeField(auto_now_add=True)
     version = models.PositiveIntegerField(default=1)
     solicitud_matricula = models.ForeignKey(
@@ -166,7 +189,7 @@ def ruta_matricula_oficial(instance, filename):
 
 
 class MatriculaOficial(models.Model):
-    documento = models.FileField(upload_to=ruta_matricula_oficial, max_length=500)
+    documento = models.FileField(upload_to=ruta_matricula_oficial, max_length=500, storage=_storage_pdf)
     fecha_emision = models.DateTimeField(auto_now_add=True)
     solicitud_matricula = models.OneToOneField(
         SolicitudMatricula,
