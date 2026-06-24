@@ -218,33 +218,20 @@ SIMPLE_JWT = {
 }
 
 # -------------------------------------------------------------------
-# Correo (Gmail SMTP)
+# Correo (Resend API, vía HTTPS)
 # Usado por notificaciones/services.py para enviar el correo real
 # además de la notificación in-app (tabla Notificacion).
 #
-# EMAIL_HOST_PASSWORD debe ser una "contraseña de aplicación" de Gmail
-# (myaccount.google.com/apppasswords), NUNCA la contraseña normal de la
-# cuenta. Requiere verificación en dos pasos activa en esa cuenta.
+# Se usa la API HTTP de Resend (https://resend.com) en vez de SMTP
+# directo, porque Railway bloquea las conexiones salientes al puerto
+# SMTP (587) por política de red ("Network is unreachable" - ver bug
+# real diagnosticado). La API de Resend viaja por HTTPS (puerto 443),
+# que sí está permitido.
+#
+# RESEND_API_KEY se obtiene en resend.com -> API Keys.
+# RESEND_FROM_EMAIL es el remitente verificado en Resend (en el plan
+# gratuito, sin dominio propio verificado, se usa el genérico
+# 'onboarding@resend.dev').
 # -------------------------------------------------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
-# Timeout corto y explícito: algunos proveedores de hosting (ej. Railway)
-# bloquean o filtran el tráfico saliente al puerto SMTP, lo que hace que
-# la conexión se quede colgada indefinidamente en vez de fallar rápido.
-# Sin este límite, eso puede agotar el WORKER TIMEOUT de Gunicorn y
-# matar el proceso completo que estaba atendiendo la petición HTTP
-# (ver bug real: aprobar una solicitud tumbaba el worker entero al
-# intentar enviar el correo de notificación). Con el timeout, el envío
-# de correo simplemente falla rápido y queda contenido por el
-# try/except de notificaciones/services.py, sin afectar el resto.
-EMAIL_TIMEOUT = 10
-
-# Si no hay credenciales configuradas (.env vacío), se cae a modo consola
-# para no romper el desarrollo local sin Gmail configurado.
-if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+RESEND_API_KEY = config('RESEND_API_KEY', default='')
+RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='SIGMA <onboarding@resend.dev>')
