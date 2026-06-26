@@ -325,6 +325,35 @@ class SolicitudMatriculaConfirmarEnvioView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Ver CU12, paso 5 del flujo normal: "Sistema confirma que todos
+        # los documentos requeridos han sido adjuntados" - esto debe
+        # cumplirse antes de poder enviar formalmente la solicitud
+        # (CU13), no solo validarse en el frontend.
+        requisitos_ids = set(
+            RequisitoDocumental.objects.filter(
+                periodo_matricula=solicitud.periodo_matricula
+            ).values_list('id', flat=True)
+        )
+        requisitos_con_documento = set(
+            DocumentoAdjunto.objects.filter(
+                solicitud_matricula=solicitud
+            ).values_list('requisito_documental_id', flat=True)
+        )
+        requisitos_faltantes = requisitos_ids - requisitos_con_documento
+        if requisitos_faltantes:
+            nombres_faltantes = list(
+                RequisitoDocumental.objects.filter(id__in=requisitos_faltantes).values_list('nombre', flat=True)
+            )
+            return Response(
+                {
+                    'detail': (
+                        f'Debes adjuntar todos los documentos requeridos antes de enviar tu solicitud. '
+                        f'Faltan: {", ".join(nombres_faltantes)}.'
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         solicitud.enviada_formalmente = True
         solicitud.save(update_fields=['enviada_formalmente', 'updated_at'])
 

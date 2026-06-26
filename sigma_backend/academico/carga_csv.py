@@ -33,7 +33,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 
 from .models import (
-    Asignatura, PlanEstudio, PlanEstudioAsignatura, HistorialAcademico, PeriodoAcademico,
+    Asignatura, PlanEstudio, PlanEstudioAsignatura, HistorialAcademico,
+    PeriodoAcademico, Prerrequisito,
 )
 from usuarios.permissions import EsJefeDepartamentoOAdministrador
 from usuarios.models import Estudiante
@@ -102,6 +103,42 @@ class CargarAsignaturasView(APIView):
         if errores:
             return Response({'detail': 'El archivo contiene errores.', 'errores': errores}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Las asignaturas son un catálogo compartido entre todos los
+        # programas, así que cualquier Jefe puede CREAR una nueva. Pero
+        # solo puede EDITAR (sobrescribir el nombre de) una asignatura
+        # que ya exista si esa asignatura forma parte de SU PROPIO plan
+        # de estudios vigente; de lo contrario no debería poder tocar
+        # el contenido de una asignatura que pertenece a otra carrera.
+        jefe, programa_id = _obtener_jefe_y_programa(request)
+        codigos_de_mi_plan = set()
+        if programa_id is not None:
+            mi_plan = PlanEstudio.objects.filter(programa_academico_id=programa_id, estado='vigente').first()
+            if mi_plan is not None:
+                codigos_de_mi_plan = set(
+                    PlanEstudioAsignatura.objects.filter(plan_estudio=mi_plan)
+                    .values_list('asignatura__codigo', flat=True)
+                )
+
+        codigos_existentes = set(
+            Asignatura.objects.filter(codigo__in=[f['codigo'].strip() for f in filas])
+            .values_list('codigo', flat=True)
+        )
+        # Un Administrador (sin jefe_departamento, programa_id is None)
+        # puede editar cualquier asignatura existente sin esta restricción.
+        if programa_id is not None:
+            codigos_bloqueados = codigos_existentes - codigos_de_mi_plan
+            if codigos_bloqueados:
+                return Response(
+                    {
+                        'detail': (
+                            'No puedes editar asignaturas que no pertenecen a tu plan de estudios: '
+                            f'{", ".join(sorted(codigos_bloqueados))}. Puedes crear asignaturas nuevas '
+                            'sin problema, o quitarlas del archivo si solo quieres referenciarlas.'
+                        ),
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         creadas, actualizadas = 0, 0
         with transaction.atomic():
             for fila in filas:
@@ -131,6 +168,12 @@ class CargarPlanEstudioView(APIView):
     permission_classes = [IsAuthenticated, EsJefeDepartamentoOAdministrador]
 
     COLUMNAS_REQUERIDAS = ['codigo_asignatura', 'semestre', 'creditos']
+    # 'prerrequisitos' es OPCIONAL: si la columna no existe en el CSV, o
+    # una fila la deja vacía, simplemente no se define ningún
+    # prerrequisito para esa asignatura (no es un error). Si tiene
+    # valor, son uno o más códigos de asignatura separados por punto y
+    # coma (ej. "ISIS-101;ISIS-103"), cada uno de los cuales debe
+    # haberse aprobado antes de poder matricular codigo_asignatura.
 
     def post(self, request):
         jefe, programa_id = _obtener_jefe_y_programa(request)
@@ -161,6 +204,7 @@ class CargarPlanEstudioView(APIView):
             codigo_asignatura = (fila.get('codigo_asignatura') or '').strip()
             semestre_raw = (fila.get('semestre') or '').strip()
             creditos_raw = (fila.get('creditos') or '').strip()
+            prerrequisitos_raw = (fila.get('prerrequisitos') or '').strip()
 
             if not codigo_asignatura:
                 errores.append(f'Fila {numero}: "codigo_asignatura" es obligatorio.')
@@ -175,10 +219,27 @@ class CargarPlanEstudioView(APIView):
                 errores.append(f'Fila {numero}: "creditos" debe ser un número entero positivo.')
                 continue
 
+            codigos_prerrequisitos = []
+            if prerrequisitos_raw:
+                for codigo_prereq in prerrequisitos_raw.split(';'):
+                    codigo_prereq = codigo_prereq.strip()
+                    if not codigo_prereq:
+                        continue
+                    if codigo_prereq == codigo_asignatura:
+                        errores.append(f'Fila {numero}: "{codigo_asignatura}" no puede ser prerrequisito de sí misma.')
+                        continue
+                    if not Asignatura.objects.filter(codigo=codigo_prereq).exists():
+                        errores.append(
+                            f'Fila {numero}: el prerrequisito "{codigo_prereq}" no existe como asignatura. Cárgala primero.'
+                        )
+                        continue
+                    codigos_prerrequisitos.append(codigo_prereq)
+
             filas_validas.append({
                 'codigo_asignatura': codigo_asignatura,
                 'semestre': int(semestre_raw),
                 'creditos': int(creditos_raw),
+                'codigos_prerrequisitos': codigos_prerrequisitos,
             })
 
         if errores:
@@ -190,7 +251,7 @@ class CargarPlanEstudioView(APIView):
         reemplazar = (request.data.get('reemplazar') or '').strip().lower() == 'true'
         eliminadas = 0
 
-        creadas, actualizadas = 0, 0
+        creadas, actualizadas, prerrequisitos_creados = 0, 0, 0
         with transaction.atomic():
             if reemplazar:
                 eliminadas, _ = PlanEstudioAsignatura.objects.filter(plan_estudio=plan).delete()
@@ -205,13 +266,28 @@ class CargarPlanEstudioView(APIView):
                 else:
                     actualizadas += 1
 
+                # Los prerrequisitos son una relación global entre
+                # asignaturas (no son específicos de este plan/carrera),
+                # así que se crean con get_or_create para no duplicar si
+                # ya existían (p. ej. de una carga anterior).
+                for codigo_prereq in fila['codigos_prerrequisitos']:
+                    asignatura_prerrequisito = Asignatura.objects.get(codigo=codigo_prereq)
+                    _, fue_creado_prereq = Prerrequisito.objects.get_or_create(
+                        asignatura=asignatura,
+                        asignatura_prerrequisito=asignatura_prerrequisito,
+                    )
+                    if fue_creado_prereq:
+                        prerrequisitos_creados += 1
+
         return Response({
             'detail': f'Plan de estudio "{plan.nombre}" actualizado exitosamente.',
             'creadas': creadas,
             'actualizadas': actualizadas,
             'eliminadas': eliminadas,
+            'prerrequisitos_creados': prerrequisitos_creados,
             'total_filas': len(filas_validas),
         }, status=status.HTTP_200_OK)
+
 
 
 # ---------------------------------------------------------------------------
