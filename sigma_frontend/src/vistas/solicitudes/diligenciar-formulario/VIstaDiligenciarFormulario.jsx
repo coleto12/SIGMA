@@ -308,7 +308,7 @@ function SeleccionarAsignaturasPaso({ solicitud, onSolicitudCreada, asignaturasS
 // ==========================================
 // SUB-COMPONENTE 2: ADJUNTAR DOCUMENTOS (PASO 2)
 // ==========================================
-function AdjuntarDocumentosPaso({ solicitud, periodoMatricula, bloqueado }) {
+function AdjuntarDocumentosPaso({ solicitud, periodoMatricula, bloqueado, onCambioCompletitud }) {
   const [requisitos, setRequisitos] = useState([]);
   const [documentos, setDocumentos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -335,6 +335,20 @@ function AdjuntarDocumentosPaso({ solicitud, periodoMatricula, bloqueado }) {
   useEffect(() => {
     cargarDatos();
   }, [cargarDatos]);
+
+  // Avisa al componente padre si TODOS los requisitos documentales ya
+  // tienen un documento adjuntado (ver CU12, paso 5 del flujo normal:
+  // "Sistema confirma que todos los documentos requeridos han sido
+  // adjuntados"). Se usa para habilitar/deshabilitar el botón
+  // "Siguiente" del paso 2, igual que ya se hace con las asignaturas
+  // en el paso 1.
+  useEffect(() => {
+    if (!onCambioCompletitud) return;
+    if (cargando) return;
+    const idsConDocumento = new Set(documentos.map((d) => d.requisito_documental));
+    const faltantes = requisitos.filter((r) => !idsConDocumento.has(r.id));
+    onCambioCompletitud(requisitos.length > 0 && faltantes.length === 0, faltantes);
+  }, [requisitos, documentos, cargando, onCambioCompletitud]);
 
   async function manejarSeleccionArchivo(requisito, evento) {
     const archivo = evento.target.files?.[0];
@@ -465,6 +479,13 @@ function VistaDiligenciarFormulario() {
   const [cargandoInicial, setCargandoInicial] = useState(true);
   const [errorInicial, setErrorInicial] = useState('');
   const [confirmandoEnvio, setConfirmandoEnvio] = useState(false);
+  const [documentosCompletos, setDocumentosCompletos] = useState(false);
+  const [requisitosFaltantes, setRequisitosFaltantes] = useState([]);
+
+  const manejarCambioCompletitudDocumentos = useCallback((completos, faltantes) => {
+    setDocumentosCompletos(completos);
+    setRequisitosFaltantes(faltantes);
+  }, []);
 
   // Carga el contexto general (periodo activo, periodo de matrícula) y,
   // si el Estudiante ya tiene una solicitud pendiente para este periodo,
@@ -611,7 +632,12 @@ function VistaDiligenciarFormulario() {
             />
           )}
           {paso === 2 && (
-            <AdjuntarDocumentosPaso solicitud={solicitud} periodoMatricula={periodoMatricula} bloqueado={!!solicitud?.enviada_formalmente} />
+            <AdjuntarDocumentosPaso
+              solicitud={solicitud}
+              periodoMatricula={periodoMatricula}
+              bloqueado={!!solicitud?.enviada_formalmente}
+              onCambioCompletitud={manejarCambioCompletitudDocumentos}
+            />
           )}
           {paso === 3 && (
             <div className="sigma-form-card">
@@ -633,6 +659,11 @@ function VistaDiligenciarFormulario() {
             ) : (
               <span className="required-legend">Selecciona al menos una asignatura para continuar</span>
             )}
+            {paso === 2 && !documentosCompletos && (
+              <span className="required-legend" style={{ color: '#c62828' }}>
+                Adjunta {requisitosFaltantes.length} documento(s) pendiente(s) para continuar
+              </span>
+            )}
 
             <div className="action-buttons">
               <button type="button" className="btn-sol-cancelar" onClick={() => navegar(-1)}>Cancelar</button>
@@ -640,7 +671,7 @@ function VistaDiligenciarFormulario() {
                 <button
                   type="button"
                   className="btn-sol-siguiente"
-                  disabled={paso === 1 && asignaturas.length === 0}
+                  disabled={(paso === 1 && asignaturas.length === 0) || (paso === 2 && !documentosCompletos)}
                   onClick={() => setPaso(paso + 1)}
                 >
                   Siguiente <span className="material-icons-outlined">arrow_forward</span>
